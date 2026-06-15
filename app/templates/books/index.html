@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% from 'pagination.html' import render_pagination %}
+{% block content %}
+<div class="d-flex align-items-center mb-4">
+  <div>
+    <h1 class="mb-1">Книги</h1>
+    <p class="text-muted mb-0">Реестр электронной библиотеки</p>
+  </div>
+  {% if can('create_book') %}
+    <a class="btn btn-primary ms-auto" href="{{ url_for('books.create') }}">Добавить книгу</a>
+  {% endif %}
+</div>
+
+{% if popular %}
+  <section class="mb-5">
+    <h2 class="h4 mb-3">Популярные книги</h2>
+    <div class="row g-3">
+      {% for book, views_count in popular %}
+        <div class="col-md-4 col-xl">
+          <a class="mini-book" href="{{ url_for('books.show', book_id=book.id) }}">
+            <strong>{{ book.title }}</strong>
+            <span>{{ views_count }} просмотров</span>
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+{% endif %}
+
+{% if recent %}
+  <section class="mb-5">
+    <h2 class="h4 mb-3">Недавно просмотренные книги</h2>
+    <div class="d-flex flex-wrap gap-2">
+      {% for book in recent %}
+        <a class="btn btn-outline-secondary" href="{{ url_for('books.show', book_id=book.id) }}">{{ book.title }}</a>
+      {% endfor %}
+    </div>
+  </section>
+{% endif %}
+
+<div class="row g-4">
+  {% for book in books %}
+    <div class="col-lg-6">
+      <article class="book-card">
+        <a class="cover-link" href="{{ url_for('books.show', book_id=book.id) }}">
+          <img src="{{ url_for('books.cover', filename=book.cover.filename) }}" alt="Обложка {{ book.title }}">
+        </a>
+        <div class="book-card-body">
+          <h2 class="h4">{{ book.title }}</h2>
+          <div class="text-muted mb-2">{{ book.author }}, {{ book.year }}</div>
+          <div class="mb-3">
+            {% for genre in book.genres %}<span class="badge text-bg-secondary">{{ genre.name }}</span>{% endfor %}
+          </div>
+          <dl class="book-meta">
+            <div><dt>Средняя оценка</dt><dd>{{ '%.2f'|format(book.average_rating) }}</dd></div>
+            <div><dt>Рецензий</dt><dd>{{ book.reviews|length }}</dd></div>
+          </dl>
+          <div class="d-flex flex-wrap gap-2 mt-auto">
+            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('books.show', book_id=book.id) }}">Просмотр</a>
+            {% if can('edit_book') %}
+              <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('books.edit', book_id=book.id) }}">Редактирование</a>
+            {% endif %}
+            {% if can('delete_book') %}
+              <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#delete-{{ book.id }}">Удалить</button>
+            {% endif %}
+          </div>
+        </div>
+      </article>
+    </div>
+
+    {% if can('delete_book') %}
+      <div class="modal fade" id="delete-{{ book.id }}" tabindex="-1">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header"><h2 class="modal-title fs-5">Удаление книги</h2></div>
+            <div class="modal-body">Вы уверены, что хотите удалить книгу {{ book.title }}?</div>
+            <div class="modal-footer">
+              <button class="btn btn-secondary" data-bs-dismiss="modal">Нет</button>
+              <form method="post" action="{{ url_for('books.delete', book_id=book.id) }}">
+                <button class="btn btn-danger" type="submit">Да</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  {% else %}
+    <p>Книги пока не добавлены.</p>
+  {% endfor %}
+</div>
+
+<div class="mt-4">{{ render_pagination(pagination, 'books.index') }}</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% from 'pagination.html' import render_pagination %}
+{% block content %}
+<h1 class="mb-4">Статистика</h1>
+<ul class="nav nav-tabs mb-4">
+  <li class="nav-item">
+    <a class="nav-link {% if tab == 'journal' %}active{% endif %}" href="{{ url_for('stats.index', tab='journal') }}">Журнал действий пользователей</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link {% if tab == 'views' %}active{% endif %}" href="{{ url_for('stats.index', tab='views') }}">Статистика просмотра книг</a>
+  </li>
+</ul>
+
+{% if tab == 'views' %}
+  <form class="row g-3 align-items-end mb-4" method="get">
+    <input type="hidden" name="tab" value="views">
+    <div class="col-sm-4">
+      <label class="form-label">Дата от</label>
+      <input class="form-control" name="date_from" type="date" value="{{ date_from }}">
+    </div>
+    <div class="col-sm-4">
+      <label class="form-label">Дата до</label>
+      <input class="form-control" name="date_to" type="date" value="{{ date_to }}">
+    </div>
+    <div class="col-sm-4"><button class="btn btn-primary">Применить</button></div>
+  </form>
+  <div class="table-responsive">
+    <table class="table table-striped">
+      <thead><tr><th>№</th><th>Название книги</th><th>Количество просмотров</th></tr></thead>
+      <tbody>
+        {% for row in pagination.items %}
+          <tr><td>{{ (pagination.page - 1) * pagination.per_page + loop.index }}</td><td>{{ row.title }}</td><td>{{ row.views_count }}</td></tr>
+        {% else %}
+          <tr><td colspan="3">Данные отсутствуют.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <a class="btn btn-outline-primary mb-3" href="{{ url_for('stats.views_csv', date_from=date_from, date_to=date_to) }}">Экспорт в CSV</a>
+  {{ render_pagination(pagination, 'stats.index', {'tab': 'views', 'date_from': date_from, 'date_to': date_to}) }}
+{% else %}
+  <div class="table-responsive">
+    <table class="table table-striped">
+      <thead><tr><th>№</th><th>Пользователь</th><th>Книга</th><th>Дата и время</th></tr></thead>
+      <tbody>
+        {% for view in pagination.items %}
+          <tr>
+            <td>{{ (pagination.page - 1) * pagination.per_page + loop.index }}</td>
+            <td>{{ view.user.full_name if view.user else 'Неаутентифицированный пользователь' }}</td>
+            <td>{{ view.book.title }}</td>
+            <td>{{ view.viewed_at.strftime('%d.%m.%Y %H:%M:%S') }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="4">Данные отсутствуют.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <a class="btn btn-outline-primary mb-3" href="{{ url_for('stats.journal_csv') }}">Экспорт в CSV</a>
+  {{ render_pagination(pagination, 'stats.index', {'tab': 'journal'}) }}
+{% endif %}
+{% endblock %}

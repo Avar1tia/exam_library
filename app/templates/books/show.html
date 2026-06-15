@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block content %}
+<article>
+  <div class="book-detail">
+    <div>
+      <img class="book-cover-large" src="{{ url_for('books.cover', filename=book.cover.filename) }}" alt="Обложка {{ book.title }}">
+    </div>
+    <div>
+      <h1>{{ book.title }}</h1>
+      <p class="lead">{{ book.author }}</p>
+      <dl class="detail-list">
+        <div><dt>Год</dt><dd>{{ book.year }}</dd></div>
+        <div><dt>Издательство</dt><dd>{{ book.publisher }}</dd></div>
+        <div><dt>Объем</dt><dd>{{ book.pages }} страниц</dd></div>
+        <div><dt>Жанры</dt><dd>{{ book.genres|map(attribute='name')|join(', ') }}</dd></div>
+        <div><dt>Средняя оценка</dt><dd>{{ '%.2f'|format(book.average_rating) }}</dd></div>
+      </dl>
+      {% if can('edit_book') %}
+        <a class="btn btn-outline-secondary" href="{{ url_for('books.edit', book_id=book.id) }}">Редактировать</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <section class="content-section">
+    <h2>Описание</h2>
+    <div class="markdown-body">{{ book.short_description|markdown|safe }}</div>
+  </section>
+
+  <section class="content-section">
+    <div class="d-flex align-items-center mb-3">
+      <h2 class="mb-0">Рецензии</h2>
+      {% if current_user.is_authenticated and can('review') and not own_review %}
+        <a class="btn btn-primary ms-auto" href="{{ url_for('books.create_review', book_id=book.id) }}">Написать рецензию</a>
+      {% endif %}
+    </div>
+    {% for review in book.reviews|sort(attribute='created_at', reverse=true) %}
+      <article class="review">
+        <div class="d-flex justify-content-between gap-3">
+          <strong>{{ review.user.full_name }}</strong>
+          <span>Оценка: {{ review.rating }}/5</span>
+        </div>
+        <div class="markdown-body mt-2">{{ review.text|markdown|safe }}</div>
+      </article>
+    {% else %}
+      <p class="text-muted">Рецензий пока нет.</p>
+    {% endfor %}
+    {% if own_review %}
+      <div class="alert alert-info mt-3">Вы уже оставили рецензию на эту книгу.</div>
+    {% endif %}
+  </section>
+</article>
+{% endblock %}

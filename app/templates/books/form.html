@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% from 'books/_form.html' import book_form %}
+{% block content %}
+<div class="form-panel">
+  <h1 class="mb-4">{{ title }}</h1>
+  <form method="post" enctype="multipart/form-data">
+    {{ book_form(data, genres, selected_genres, errors, create) }}
+  </form>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  new EasyMDE({
+    element: document.querySelector('.markdown-editor'),
+    spellChecker: false,
+    status: false
+  });
+</script>
+{% endblock %}

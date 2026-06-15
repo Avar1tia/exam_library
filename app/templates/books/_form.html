@@ -1,0 +1,58 @@
+{% macro field_error(errors, name) %}
+  {% if errors.get(name) %}<div class="invalid-feedback">{{ errors[name] }}</div>{% endif %}
+{% endmacro %}
+
+{% macro book_form(data, genres, selected_genres, errors, create) %}
+  <div class="row g-3">
+    <div class="col-12">
+      <label class="form-label" for="title">Название</label>
+      <input class="form-control {% if errors.get('title') %}is-invalid{% endif %}" id="title" name="title" value="{{ data.get('title', '') }}" required>
+      {{ field_error(errors, 'title') }}
+    </div>
+    <div class="col-md-4">
+      <label class="form-label" for="year">Год</label>
+      <input class="form-control {% if errors.get('year') %}is-invalid{% endif %}" id="year" name="year" type="number" value="{{ data.get('year', '') }}" required>
+      {{ field_error(errors, 'year') }}
+    </div>
+    <div class="col-md-4">
+      <label class="form-label" for="pages">Объем, страниц</label>
+      <input class="form-control {% if errors.get('pages') %}is-invalid{% endif %}" id="pages" name="pages" type="number" value="{{ data.get('pages', '') }}" required>
+      {{ field_error(errors, 'pages') }}
+    </div>
+    <div class="col-md-4">
+      <label class="form-label" for="publisher">Издательство</label>
+      <input class="form-control {% if errors.get('publisher') %}is-invalid{% endif %}" id="publisher" name="publisher" value="{{ data.get('publisher', '') }}" required>
+      {{ field_error(errors, 'publisher') }}
+    </div>
+    <div class="col-md-6">
+      <label class="form-label" for="author">Автор</label>
+      <input class="form-control {% if errors.get('author') %}is-invalid{% endif %}" id="author" name="author" value="{{ data.get('author', '') }}" required>
+      {{ field_error(errors, 'author') }}
+    </div>
+    <div class="col-md-6">
+      <label class="form-label" for="genre_ids">Жанры</label>
+      <select class="form-select {% if errors.get('genre_ids') %}is-invalid{% endif %}" id="genre_ids" name="genre_ids" multiple size="5">
+        {% for genre in genres %}
+          <option value="{{ genre.id }}" {% if genre.id|string in selected_genres %}selected{% endif %}>{{ genre.name }}</option>
+        {% endfor %}
+      </select>
+      {{ field_error(errors, 'genre_ids') }}
+    </div>
+    <div class="col-12">
+      <label class="form-label" for="short_description">Описание</label>
+      <textarea class="form-control markdown-editor {% if errors.get('short_description') %}is-invalid{% endif %}" id="short_description" name="short_description" rows="10">{{ data.get('short_description', '') }}</textarea>
+      {{ field_error(errors, 'short_description') }}
+    </div>
+    {% if create %}
+      <div class="col-12">
+        <label class="form-label" for="cover">Обложка</label>
+        <input class="form-control {% if errors.get('cover') %}is-invalid{% endif %}" id="cover" name="cover" type="file" accept="image/*" required>
+        {{ field_error(errors, 'cover') }}
+      </div>
+    {% endif %}
+  </div>
+  <div class="mt-4">
+    <button class="btn btn-primary" type="submit">Сохранить</button>
+    <a class="btn btn-outline-secondary" href="{{ url_for('books.index') }}">Отмена</a>
+  </div>
+{% endmacro %}
