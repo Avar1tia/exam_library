@@ -11,6 +11,18 @@ from .rights import rights_required
 bp = Blueprint("stats", __name__, url_prefix="/statistics")
 
 
+class SimplePagination:
+    def __init__(self, items, page, per_page, total):
+        self.items = items
+        self.page = page
+        self.per_page = per_page
+        self.total = total
+        self.pages = max((total + per_page - 1) // per_page, 1)
+
+    def iter_pages(self):
+        return range(1, self.pages + 1)
+
+
 def parse_date(value, end=False):
     if not value:
         return None
@@ -27,7 +39,7 @@ def journal_query():
 
 def views_query(date_from=None, date_to=None):
     query = (
-        db.select(Book.title, func.count(BookView.id).label("views_count"))
+        db.select(Book.title.label("book_title"), func.count(BookView.id).label("views_count"))
         .join(BookView)
         .where(BookView.user_id.is_not(None))
         .group_by(Book.id)
@@ -50,11 +62,16 @@ def index():
     date_from = parse_date(raw_from)
     date_to = parse_date(raw_to, end=True)
     if tab == "views":
-        pagination = db.paginate(
-            views_query(date_from, date_to),
-            page=page,
-            per_page=10,
-            error_out=False,
+        rows = [
+            {"book_title": row.book_title, "views_count": row.views_count}
+            for row in db.session.execute(views_query(date_from, date_to)).all()
+        ]
+        start = (page - 1) * 10
+        pagination = SimplePagination(
+            rows[start:start + 10],
+            page,
+            10,
+            len(rows),
         )
     else:
         pagination = db.paginate(
@@ -111,5 +128,5 @@ def views_csv():
     return csv_response(
         filename,
         ["Книга", "Количество просмотров"],
-        [(row.title, row.views_count) for row in rows],
+        [(row.book_title, row.views_count) for row in rows],
     )
